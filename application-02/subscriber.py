@@ -16,7 +16,6 @@ def get_arg_parser():
     parser.add_argument('--host', default='localhost', action='store', help="RabbitMQ server host.")
     parser.add_argument('--exchange', default='default_pc', action='store', help="RabbitMQ exchange name.")
     parser.add_argument('--topic', required=True, action='store', help="Topics: cpu.usage_pct cpu.load1 cpu.load5 cpu.load15 ram.usage_pct.")
-    parser.add_argument('--interval', default=0.1, action='store', help="Interval between messages.")
     return parser
 
 def get_rabbitmq_connection_channel(host, exchange):
