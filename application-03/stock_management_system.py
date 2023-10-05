@@ -24,7 +24,7 @@ class StockManagementSystem:
 
         print(f"User '{username}' registered successfully.")
 
-    def productEntry(self, code, name, description, quantity, price, minimum_stock):
+    def product_entry(self, code, name, description, quantity, price, minimum_stock):
         #TODO: Check signature
 
         # Check if 'products.csv' file exists; create it with headers if not
@@ -72,7 +72,7 @@ class StockManagementSystem:
 
         print(f"Product '{name}' (Code: {code}) added to inventory.")
 
-    def productOutput(self, code, quantity):
+    def product_output(self, code, quantity):
         #TODO: Check signature
         
         available_quantity = None
@@ -133,6 +133,6 @@ if __name__ == '__main__':
     sms.register_user('Gabriel', gabriel_public_key.export_key(), 'GabrielRemoteReference')
     sms.register_user('Matheus', matheus_public_key.export_key(), 'MatheusRemoteReference')
 
-    sms.productEntry(1, 'Product A', 'Description A', 100, 10.99, 50)
-    sms.productEntry(2, 'Product B', 'Description B', 50, 5.99, 30)
-    sms.productOutput(1, 30)
+    sms.product_entry(1, 'Product A', 'Description A', 100, 10.99, 50)
+    sms.product_entry(2, 'Product B', 'Description B', 50, 5.99, 30)
+    sms.product_output(1, 30)
