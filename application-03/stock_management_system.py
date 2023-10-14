@@ -1,6 +1,9 @@
 from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
 from key_generator import KeyGenerator
 import csv
+import json
 from datetime import datetime
 import os
 
@@ -71,7 +74,7 @@ class StockManagementSystem:
             entry_writer.writerow(entry_info)
 
         print(f"Product '{name}' (Code: {code}) added to inventory.")
-
+    
     def product_output(self, code, quantity):
         #TODO: Check signature
         
@@ -121,6 +124,36 @@ class StockManagementSystem:
             output_writer.writerow(output_info)
 
         print(f"Product with code {code} outputted: {quantity} units.")
+    
+    def validate_payload(self, username, payload, signature_hex):
+        user_row = None
+        with open("users.csv", 'r') as file:
+            csvreader = csv.reader(file)
+            header = next(csvreader)
+            for row in csvreader:
+                if row[0] == username:
+                    user_row = row
+
+        if user_row is None:
+            print(f'Invalid user {username}')
+            return False, None
+
+        public_key = RSA.import_key(user_row[1].encode('utf-8'))
+
+        # Hash the message
+        hash_object = SHA256.new(payload.encode())
+
+        # Convert the hexadecimal signature back to bytes
+        signature = bytes.fromhex(signature_hex)
+        
+        try:
+            # Verify the signature using the public key
+            pkcs1_15.new(public_key).verify(hash_object, signature)
+            print("Signature is valid")
+            return True, json.loads(payload)
+        except (ValueError, TypeError):
+            print("Signature is invalid. Message could not be verified.")
+        return False, None
 
 # Example usage
 if __name__ == '__main__':
@@ -130,8 +163,10 @@ if __name__ == '__main__':
     gabriel_public_key = key_generator.generate_keys("gabriel_private_key.pem")
     matheus_public_key = key_generator.generate_keys('matheus_private_key.pem')
 
+    key = matheus_public_key.export_key()
+    print(key)
     sms.register_user('Gabriel', gabriel_public_key.export_key(), 'GabrielRemoteReference')
-    sms.register_user('Matheus', matheus_public_key.export_key(), 'MatheusRemoteReference')
+    sms.register_user('Matheus', key, 'MatheusRemoteReference')
 
     sms.product_entry(1, 'Product A', 'Description A', 100, 10.99, 50)
     sms.product_entry(2, 'Product B', 'Description B', 50, 5.99, 30)
