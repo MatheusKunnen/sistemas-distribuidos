@@ -22,7 +22,7 @@ class Server:
         # print('p entry', username, payload_raw, signature)
         is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)
         if is_signature_valid:
-            return self.__sms.product_entryproduct_entry(payload['code'], payload['name'], payload['description'], payload['quantity'], payload['price'], payload['minimum_stock'], signature)
+            return self.__sms.product_entry(payload['code'], payload['name'], payload['description'], payload['quantity'], payload['price'], payload['minimum_stock'], signature)
         else:
             return "Invalid signature"
     
@@ -30,9 +30,23 @@ class Server:
         # print('p output', username, payload_raw, signature)
         is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)
         if is_signature_valid:
-            return self.__sms.product_output(int(payload['code']), int(payload['quantity']))
+            return self.__sms.product_output(int(payload['code']), float(payload['quantity']))
         else:
             return "Invalid signature"
+        
+    def get_products(self, username, payload_raw, signature):
+        is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)
+        if is_signature_valid:
+            return self.__sms.get_products()
+        else:
+            return 'Invalid signature'
+        
+    def notification_register(self, username, payload_raw, signature):
+        is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)
+        if is_signature_valid:
+            return self.__sms.get_products()
+        else:
+            return 'Invalid signature'
     
 
 if __name__ == "__main__":

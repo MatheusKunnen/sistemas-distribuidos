@@ -10,6 +10,8 @@ from enum import Enum
 import base64
 import os
 import json
+import random
+from threading import Thread
 
 Pyro5.config.SERIALIZER = "marshal"
 
@@ -24,10 +26,10 @@ class MenuScreen(Enum):
 
 
 class ClientMenu: 
-    SEP_LEN = 20
     SEP_CHAR = "-"
     
-    def __init__(self):
+    def __init__(self, notify_uri):
+        self.__notify_uri = notify_uri
         self.__running = False
         self.__key = None
         self.__remote_reference = None
@@ -39,7 +41,7 @@ class ClientMenu:
         self.__running = True
         
         while self.__running and len(self.__state_stack) > 0:
-            try:
+            # try:
                 new_state = self.__handle_screen()
                 print(new_state)
                 if isinstance(new_state, int):
@@ -47,13 +49,15 @@ class ClientMenu:
                         self.__state_stack.pop()
                     elif new_state == 4:
                         self.__state_stack.append(MenuScreen.P_MOV)
+                    elif new_state == 5:
+                        self.__state_stack.append(MenuScreen.P_STK_REPORT)
                 else:
                     self.__state_stack.append(new_state)
-                # os.system('cls||clear')
-            except Exception as err:
-                print("".ljust(ClientMenu.SEP_LEN, ClientMenu.SEP_CHAR))
-                print(err)
-                self.__state_stack:[MenuScreen] = [MenuScreen.HOME]
+                os.system('cls||clear')
+            # except Exception as err:
+                # print("".ljust(ClientMenu.SEP_LEN, ClientMenu.SEP_CHAR))
+                # print(err)
+                # self.__state_stack:[MenuScreen] = [MenuScreen.HOME]
 
 
     def __handle_screen(self):
@@ -126,7 +130,7 @@ class ClientMenu:
 
     def __handle_login(self):
         self.__print_header()
-        key_path = input("Private Key path:")
+        key_path = './mk_private_key.pem' #input("Private Key path:")
         try:
             with open(key_path, "rb") as private_key_file:
                 self.__key = RSA.import_key(private_key_file.read())
@@ -174,18 +178,63 @@ class ClientMenu:
         return -1
 
     def __handle_p_stk_report(self):
-        return 0
+        self.__print_header()
+
+        payload = {'magic_number': random.randint(1,100)}
+        payload_encoded = self.__get_encoded_payload(payload)
+        payload_signature = self.__sign_payload(payload_encoded)
+
+        products = self.__sms.get_products(self.__username, payload_encoded, payload_signature.hex())
+        if isinstance(property, str):
+            print(products)
+        else:
+            header = '\t'.join(products[0].keys())
+            separator = ''.ljust(len(header), '-')
+            print(header, '\n', separator)
+            for product in products:
+                values = []
+                for key in product.keys():
+                    values.append(product[key])
+                print('\t'.join(values))
+
+        input('Enter to continue...')
+        return -1
 
     def __handle_p_mov_report(self):
-        return 0
+        self.__print_header()
+        start_timestamp = input('Start (YYYY-MM-dd HH):')
+        end_timestamp = input('End (YYYY-MM-dd HH):')
+        # TODO
+        input('Enter to continue...')
+        return -1
 
     def __handle_p_no_mov_report(self):
-        return 0
+        self.__print_header()
+        start_timestamp = input('Start (YYYY-MM-dd HH):')
+        end_timestamp = input('End (YYYY-MM-dd HH):')
+        # TODO
+        input('Enter to continue...')
+        return -1
 
     def __print_header(self): 
-        print("".ljust(ClientMenu.SEP_LEN, ClientMenu.SEP_CHAR))
-        print("Stock Management System")
-        print("".ljust(ClientMenu.SEP_LEN, ClientMenu.SEP_CHAR))
+        header = "Stock Management System"
+        print("".ljust(len(header), ClientMenu.SEP_CHAR))
+        print(header)
+        print("".ljust(len(header), ClientMenu.SEP_CHAR))
+
+    def __register_notify(self):
+        payload = {'uri': self.__notify_uri}
+        payload_encoded = self.__get_encoded_payload(payload)
+        payload_signature = self.__sign_payload(payload_encoded)
+
+        self.sms.notification_register(self.__username, payload_encoded, payload_signature.hex())
+
+    def __clear_notify(self):
+        payload = {'uri': self.__notify_uri}
+        payload_encoded = self.__get_encoded_payload(payload)
+        payload_signature = self.__sign_payload(payload_encoded)
+
+        self.sms.notification_clear(self.__username, payload_encoded, payload_signature.hex())
 
     def __get_encoded_payload(self, payload):
         return json.dumps(payload)
@@ -199,6 +248,20 @@ class ClientMenu:
 
         return signature
 
+@Pyro5.api.expose
+def notify(msg):
+    print(msg)
+
+def serve(daemon):
+    daemon.requestLoop()      
+
 if __name__ == '__main__':
-    menu = ClientMenu()
+
+    daemon = Pyro5.server.Daemon() 
+    uri = daemon.register(notify)   
+    server_t = Thread(target=serve, name="Client server thread", args=(daemon, ))
+
+    menu = ClientMenu(uri)
+    
+    server_t.start()
     menu.run()

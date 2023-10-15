@@ -36,44 +36,49 @@ class StockManagementSystem:
                 writer = csv.DictWriter(file, fieldnames=['Code', 'Name', 'Description', 'Quantity', 'Price', 'Minimum Stock'])
                 writer.writeheader()
 
+        existing_product = None
+        products = []
         # Check if a product with the same code already exists
         with open('products.csv', mode='r') as file:
             reader = csv.DictReader(file)
             for row in reader:
                 if int(row['Code']) == code:
-                    print(f"A product with code {code} already exists.")
-                    return
+                    existing_product = row
+                else:
+                    products.append(row)
+
+        existing_quantity = 0 if existing_product is None else float(existing_product['Quantity'])
 
         product_info = {
             'Code': code,
             'Name': name,
             'Description': description,
-            'Quantity': quantity,
+            'Quantity': abs(quantity) + existing_quantity,
             'Price': price,
             'Minimum Stock': minimum_stock
         }
 
-        with open('products.csv', mode='a', newline='') as file:
+        products.append(product_info)
+
+        with open('products.csv', mode='w', newline='') as file:
             writer = csv.DictWriter(file, fieldnames=product_info.keys())
-            writer.writerow(product_info)
+            writer.writeheader()
+            writer.writerows(products)
 
         entry_info = {
             'Code': code,
-            'Name': name,
-            'Description': description,
-            'Quantity': quantity,
-            'Price': price,
-            'Minimum Stock': minimum_stock,
+            'Quantity': abs(quantity),
             'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
-        with open('product_entry.csv', mode='a', newline='') as entry_file:
+        with open('product_movement.csv', mode='a', newline='') as entry_file:
             entry_writer = csv.DictWriter(entry_file, fieldnames=entry_info.keys())
             if entry_file.tell() == 0:
                 entry_writer.writeheader()
             entry_writer.writerow(entry_info)
 
-        print(f"Product '{name}' (Code: {code}) added to inventory.")
+        msg = f"Product '{name}' (Code: {code}) added to inventory, total quantity {product_info['Quantity']}."
+        print(msg)
     
     def product_output(self, code, quantity):
         #TODO: Check signature
@@ -84,16 +89,18 @@ class StockManagementSystem:
             reader = csv.DictReader(file)
             for row in reader:
                 if int(row['Code']) == code:
-                    available_quantity = int(row['Quantity'])
+                    available_quantity = float(row['Quantity'])
                     break
 
         if available_quantity is None:
-            print(f"Product with code {code} not found in inventory.")
-            return
+            msg = f"Product with code {code} not found in inventory."
+            print(msg)
+            return msg
 
         if quantity > available_quantity:
-            print(f"Not enough products in inventory. Available quantity: {available_quantity}")
-            return
+            msg = f"Not enough products in inventory. Available quantity: {available_quantity}"
+            print(msg)
+            return msg
 
         # Update the 'products.csv' file with the reduced quantity
         updated_products = []
@@ -102,7 +109,7 @@ class StockManagementSystem:
             reader = csv.DictReader(file)
             for row in reader:
                 if int(row['Code']) == code:
-                    row['Quantity'] = str(int(row['Quantity']) - quantity)
+                    row['Quantity'] = str(float(row['Quantity']) - abs(quantity))
                 updated_products.append(row)
 
         with open('products.csv', mode='w', newline='') as file:
@@ -113,17 +120,19 @@ class StockManagementSystem:
         # Append the product output information to the 'product_output.csv' file
         output_info = {
             'Code': code,
-            'Quantity': quantity,
+            'Quantity': -abs(quantity),
             'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
-        with open('product_output.csv', mode='a', newline='') as output_file:
+        with open('product_movement.csv', mode='a', newline='') as output_file:
             output_writer = csv.DictWriter(output_file, fieldnames=output_info.keys())
             if output_file.tell() == 0:
                 output_writer.writeheader()
             output_writer.writerow(output_info)
 
-        print(f"Product with code {code} outputted: {quantity} units.")
+        msg = f"Product with code {code} outputted: {quantity} units."
+        print(msg)
+        return msg
     
     def validate_payload(self, username, payload, signature_hex):
         user_row = None
@@ -155,6 +164,23 @@ class StockManagementSystem:
             print("Signature is invalid. Message could not be verified.")
         return False, None
 
+    def get_products(self):
+        products = []
+        with open("products.csv", 'r') as file:
+            csvreader = csv.DictReader(file)
+            for row in csvreader:
+                products.append(row)
+        return products
+    
+    def get_products_movement(self, start, end):
+        products = []
+        with open("products.csv", 'r') as file:
+            csvreader = csv.DictReader(file)
+            for row in csvreader:
+                products.append(row)
+        return products
+    
+                
 # Example usage
 if __name__ == '__main__':
     sms = StockManagementSystem()
@@ -171,3 +197,5 @@ if __name__ == '__main__':
     sms.product_entry(1, 'Product A', 'Description A', 100, 10.99, 50)
     sms.product_entry(2, 'Product B', 'Description B', 50, 5.99, 30)
     sms.product_output(1, 30)
+
+    print(sms.get_products())
