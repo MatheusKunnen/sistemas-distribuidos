@@ -12,9 +12,10 @@ import os
 import json
 import random
 from threading import Thread
+from queue import Queue
 
 Pyro5.config.SERIALIZER = "marshal"
-
+Pyro5.config.DETAILED_TRACEBACK = True
 class MenuScreen(Enum):
     HOME = 1            # HOME
     REGISTER = 2        # REGISTER
@@ -28,8 +29,9 @@ class MenuScreen(Enum):
 class ClientMenu: 
     SEP_CHAR = "-"
     
-    def __init__(self, notify_uri):
+    def __init__(self, notify_uri = None, msg_q: Queue = None):
         self.__notify_uri = notify_uri
+        self.__msg_q = msg_q
         self.__running = False
         self.__key = None
         self.__remote_reference = None
@@ -37,13 +39,16 @@ class ClientMenu:
         self.__state_stack:[MenuScreen] = [MenuScreen.HOME]
         self.__sms = Pyro5.api.Proxy("PYRONAME:sms")
 
+    def set_uri(self, uri):
+        self.__notify_uri = uri
+
     def run(self):
         self.__running = True
         
         while self.__running and len(self.__state_stack) > 0:
-            # try:
+            try:
+                self.__check_msg()
                 new_state = self.__handle_screen()
-                print(new_state)
                 if isinstance(new_state, int):
                     if new_state < 0:
                         self.__state_stack.pop()
@@ -51,17 +56,25 @@ class ClientMenu:
                         self.__state_stack.append(MenuScreen.P_MOV)
                     elif new_state == 5:
                         self.__state_stack.append(MenuScreen.P_STK_REPORT)
+                    elif new_state == 6:
+                        self.__state_stack.append(MenuScreen.P_MOV_REPORT)
+                    elif new_state == 7:
+                        self.__state_stack.append(MenuScreen.P_NO_MOV_REPORT)
                 else:
                     self.__state_stack.append(new_state)
-                os.system('cls||clear')
+                # os.system('cls||clear')
             # except Exception as err:
+            #     print("".join(Pyro5.errors.get_pyro_traceback()))
+            #     print("Invalid key path")
+            finally:
+                self.__clear_notify()
+            
                 # print("".ljust(ClientMenu.SEP_LEN, ClientMenu.SEP_CHAR))
                 # print(err)
                 # self.__state_stack:[MenuScreen] = [MenuScreen.HOME]
 
 
     def __handle_screen(self):
-        print('handle', self.__state_stack[-1])
         match self.__state_stack[-1]:
             case MenuScreen.HOME:
                 return self.__handle_home()
@@ -111,6 +124,7 @@ class ClientMenu:
         name_raw = input("Username:")
         name_formatted = str(name_raw).lower().replace(' ', '')
 
+        print('Generating new key...')
         self.__key = self.__key_generator.generate_keys(f'{name_formatted}_private_key.pem')
 
         self.__remote_reference = f"{name_formatted}ObjectReference"
@@ -119,9 +133,10 @@ class ClientMenu:
 
         try:
             public_key =  self.__key.export_key()
-            print(public_key)
             
             self.__sms.register(name_formatted, base64.b64encode(public_key).decode('ascii'), self.__remote_reference)
+
+            self.__register_notify()
         except:
             self.__key = None
             self.__remote_reference = None
@@ -136,12 +151,14 @@ class ClientMenu:
                 self.__key = RSA.import_key(private_key_file.read())
             self.__username = os.path.basename(key_path).split('_')[0]
             self.__remote_reference = f"{self.__username}ObjectReference"
-        except:
-            print("Invalid key path")
+            self.__register_notify()
+        except Exception as e:
+            print(e)
             self.__key = None
             self.__remote_reference = None
             self.__username = None
-            return 0 
+            input('Enter to continue...')
+
         return -1
 
     def __handle_p_mov(self):
@@ -227,14 +244,31 @@ class ClientMenu:
         payload_encoded = self.__get_encoded_payload(payload)
         payload_signature = self.__sign_payload(payload_encoded)
 
-        self.sms.notification_register(self.__username, payload_encoded, payload_signature.hex())
+        success = self.__sms.notification_register(self.__username, payload_encoded, payload_signature.hex())
+        if not success:
+            self.__key = None
+            self.__remote_reference = None
+            self.__username = None
 
     def __clear_notify(self):
+        if self.__key is None:
+            return
+        
         payload = {'uri': self.__notify_uri}
         payload_encoded = self.__get_encoded_payload(payload)
         payload_signature = self.__sign_payload(payload_encoded)
 
-        self.sms.notification_clear(self.__username, payload_encoded, payload_signature.hex())
+        self.__sms.notification_clear(self.__username, payload_encoded, payload_signature.hex())
+
+    def __check_msg(self):
+        try:
+            msg = self.__msg_q.get_nowait()
+            if msg is not None:
+                print(''.ljust(len(msg),'#'))
+                print(msg)
+                print(''.ljust(len(msg),'#'))
+        except:
+            return
 
     def __get_encoded_payload(self, payload):
         return json.dumps(payload)
@@ -248,20 +282,23 @@ class ClientMenu:
 
         return signature
 
-@Pyro5.api.expose
-def notify(msg):
-    print(msg)
+    @Pyro5.api.expose
+    @Pyro5.api.oneway
+    def notify(self, msg):
+        self.__msg_q.put(msg)
 
 def serve(daemon):
+    print('thread running')
     daemon.requestLoop()      
 
 if __name__ == '__main__':
-
+    msg_q = Queue()
     daemon = Pyro5.server.Daemon() 
-    uri = daemon.register(notify)   
-    server_t = Thread(target=serve, name="Client server thread", args=(daemon, ))
+    menu = ClientMenu(None, msg_q)
+    uri = daemon.register(menu)
+    menu.set_uri(str(uri))
 
-    menu = ClientMenu(uri)
-    
+    server_t = Thread(target=serve, name="Client server thread", args=(daemon, ))    
     server_t.start()
+
     menu.run()

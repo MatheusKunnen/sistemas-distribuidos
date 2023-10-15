@@ -8,8 +8,9 @@ from datetime import datetime
 import os
 
 class StockManagementSystem:
-    def __init__(self):
+    def __init__(self, notify_function = None):
         # Initialize attributes here
+        self.__notify_function = notify_function
         pass
 
     def register_user(self, username, public_key, remote_object_reference):
@@ -58,6 +59,8 @@ class StockManagementSystem:
             'Minimum Stock': minimum_stock
         }
 
+        should_notify = float(product_info['Quantity']) < float(product_info['Minimum Stock'])
+
         products.append(product_info)
 
         with open('products.csv', mode='w', newline='') as file:
@@ -78,27 +81,33 @@ class StockManagementSystem:
             entry_writer.writerow(entry_info)
 
         msg = f"Product '{name}' (Code: {code}) added to inventory, total quantity {product_info['Quantity']}."
-        print(msg)
+        print(msg) 
+
+        if should_notify:
+            msg = f"Product '{name}' have {product_info['Quantity']} which is less than its minimum stock of {product_info['Minimum Stock']}"
+            print(msg)
+            self.notify(msg)
     
     def product_output(self, code, quantity):
         #TODO: Check signature
         
-        available_quantity = None
+        product_info = None
 
         with open('products.csv', mode='r') as file:
             reader = csv.DictReader(file)
             for row in reader:
                 if int(row['Code']) == code:
-                    available_quantity = float(row['Quantity'])
+                    # product_info['Quantity'] = float(row['Quantity'])
+                    product_info = row
                     break
 
-        if available_quantity is None:
+        if product_info['Quantity'] is None:
             msg = f"Product with code {code} not found in inventory."
             print(msg)
             return msg
 
-        if quantity > available_quantity:
-            msg = f"Not enough products in inventory. Available quantity: {available_quantity}"
+        if float(quantity) > float(product_info['Quantity']):
+            msg = f"Not enough products in inventory. Available quantity: {product_info['Quantity']}"
             print(msg)
             return msg
 
@@ -129,6 +138,14 @@ class StockManagementSystem:
             if output_file.tell() == 0:
                 output_writer.writeheader()
             output_writer.writerow(output_info)
+
+
+        should_notify = float(product_info['Quantity']) < float(product_info['Minimum Stock'])
+
+        if should_notify:
+            msg = f"Product '{product_info['Name']}' have {product_info['Quantity']} which is less than its minimum stock of {product_info['Minimum Stock']}"
+            print(msg)
+            self.notify(msg)
 
         msg = f"Product with code {code} outputted: {quantity} units."
         print(msg)
@@ -180,7 +197,10 @@ class StockManagementSystem:
                 products.append(row)
         return products
     
-                
+    def notify(self, msg):
+        if self.__notify_function is not None:
+            self.__notify_function(msg)
+
 # Example usage
 if __name__ == '__main__':
     sms = StockManagementSystem()
