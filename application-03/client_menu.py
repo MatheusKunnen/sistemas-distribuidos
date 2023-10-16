@@ -47,7 +47,6 @@ class ClientMenu:
         
         while self.__running and len(self.__state_stack) > 0:
             try:
-                self.__check_msg()
                 new_state = self.__handle_screen()
                 if isinstance(new_state, int):
                     if new_state < 0:
@@ -63,11 +62,12 @@ class ClientMenu:
                 else:
                     self.__state_stack.append(new_state)
                 # os.system('cls||clear')
-            # except Exception as err:
+            except Exception as err:
+                pass
             #     print("".join(Pyro5.errors.get_pyro_traceback()))
             #     print("Invalid key path")
-            finally:
-                self.__clear_notify()
+            # finally:
+        self.__clear_notify()
             
                 # print("".ljust(ClientMenu.SEP_LEN, ClientMenu.SEP_CHAR))
                 # print(err)
@@ -285,6 +285,11 @@ class ClientMenu:
     @Pyro5.api.expose
     @Pyro5.api.oneway
     def notify(self, msg):
+        print(''.ljust(len(msg),'#'))
+        print('Server notification received. :D')
+        print(''.ljust(len(msg),'#'))
+        print(msg)
+        print(''.ljust(len(msg),'#'))
         self.__msg_q.put(msg)
 
 def serve(daemon):

@@ -2,6 +2,7 @@ from stock_management_system import StockManagementSystem
 import Pyro5.api
 import Pyro5
 import base64
+from threading import Timer
 
 Pyro5.config.SERIALIZER = "marshal"
 Pyro5.config.DETAILED_TRACEBACK = True
@@ -75,15 +76,50 @@ class Server:
             notify_uri = Pyro5.api.URI(uri)
             notify_proxy = Pyro5.api.Proxy(notify_uri)
             notify_proxy.notify(msg)
-    
+
+    def notify_product_for_promotion(self):
+        try:
+            print('Checking for products for promotions')
+            products = self.__sms.get_products()
+            products_for_promotion = []
+            for product in products:
+                if product['Quantity'] > product['Minimum Stock']:
+                    products_for_promotion.append({'Code':product['Code'],'Name':product['Name'],'Quantity':product['Quantity']})
+
+            msg = ['Products for promotions']
+            if len(products_for_promotion) > 0:
+                msg.append('\t'.join(products_for_promotion[0].keys()))
+                for product in products_for_promotion:
+                    msg.append('\t'.join(product.values()))
+            else:
+                print('No products for promotions found. :(')
+                return
+            
+            self.__notify('\n'.join(msg))
+        finally:
+            pass
+
+
+class RepeatTimer(Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs) 
 
 if __name__ == "__main__":
-    server = Server()
-    daemon = Pyro5.server.Daemon()         
-    ns = Pyro5.api.locate_ns() 
+    timer = None
+    try:
+        server = Server()
+        daemon = Pyro5.server.Daemon()         
+        ns = Pyro5.api.locate_ns() 
+            
+        uri = daemon.register(server)   
+        ns.register("sms", uri)   
+            
+        timer = RepeatTimer(60*60*24, server.notify_product_for_promotion)
+        timer.start()
         
-    uri = daemon.register(server)   
-    ns.register("sms", uri)   
-        
-    print("Ready.")
-    daemon.requestLoop()      
+        print("Ready.")
+        daemon.requestLoop()
+    finally:
+        if timer is not None:
+            pass
