@@ -87,6 +87,8 @@ class StockManagementSystem:
             msg = f"Product '{name}' have {product_info['Quantity']} which is less than its minimum stock of {product_info['Minimum Stock']}"
             print(msg)
             self.notify(msg)
+
+        return msg
     
     def product_output(self, code, quantity):
         product_info = None

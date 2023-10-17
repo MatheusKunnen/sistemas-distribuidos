@@ -16,6 +16,8 @@ from queue import Queue
 
 Pyro5.config.SERIALIZER = "marshal"
 Pyro5.config.DETAILED_TRACEBACK = True
+DEBUG = False
+
 class MenuScreen(Enum):
     HOME = 1            # HOME
     REGISTER = 2        # REGISTER
@@ -63,16 +65,12 @@ class ClientMenu:
                     self.__state_stack.append(new_state)
                 # os.system('cls||clear')
             except Exception as err:
-                pass
-            #     print("".join(Pyro5.errors.get_pyro_traceback()))
-            #     print("Invalid key path")
-            # finally:
-        self.__clear_notify()
-            
-                # print("".ljust(ClientMenu.SEP_LEN, ClientMenu.SEP_CHAR))
-                # print(err)
-                # self.__state_stack:[MenuScreen] = [MenuScreen.HOME]
-
+                if DEBUG:
+                    print(err)
+                    print("".join(Pyro5.errors.get_pyro_traceback()))
+                    print("Invalid key path")
+            finally:
+                self.__clear_notify()
 
     def __handle_screen(self):
         match self.__state_stack[-1]:
@@ -301,7 +299,7 @@ class ClientMenu:
     def notify(self, msg):
         print(''.ljust(len(msg),'#'))
         print('Server notification received. :D')
-        print(''.ljust(len(msg),'#'))
+        print(''.ljust(len(msg),'='))
         print(msg)
         print(''.ljust(len(msg),'#'))
         self.__msg_q.put(msg)

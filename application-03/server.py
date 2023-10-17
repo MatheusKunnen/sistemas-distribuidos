@@ -95,11 +95,11 @@ class Server:
 
     def notify_product_for_promotion(self):
         try:
-            print('Checking for products for promotions')
+            print('Checking for products to promote')
             products = self.__sms.get_products()
             products_for_promotion = []
             for product in products:
-                if product['Quantity'] > product['Minimum Stock']:
+                if float(product['Quantity']) > float(product['Minimum Stock']):
                     products_for_promotion.append({'Code':product['Code'],'Name':product['Name'],'Quantity':product['Quantity']})
 
             msg = ['Products for promotions']
@@ -112,6 +112,10 @@ class Server:
                 return
             
             self.__notify('\n'.join(msg))
+        except Exception as err:
+            print(err)
+            print('Error during promotions notification')
+            pass
         finally:
             pass
 
@@ -131,7 +135,9 @@ if __name__ == "__main__":
         uri = daemon.register(server)   
         ns.register("sms", uri)   
             
-        timer = RepeatTimer(60*60*24, server.notify_product_for_promotion)
+        TIMER_TIME = 60*60*24 # 24hours
+        # TIMER_TIME = 10 # 10s
+        timer = RepeatTimer(TIMER_TIME, server.notify_product_for_promotion)
         timer.start()
         
         print("Ready.")
