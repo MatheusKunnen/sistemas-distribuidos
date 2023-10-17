@@ -31,8 +31,6 @@ class StockManagementSystem:
         print(f"User '{username}' registered successfully.")
 
     def product_entry(self, code, name, description, quantity, price, minimum_stock):
-        #TODO: Check signature
-
         # Check if 'products.csv' file exists; create it with headers if not
         if not os.path.isfile('products.csv'):
             with open('products.csv', mode='w', newline='') as file:
@@ -56,7 +54,7 @@ class StockManagementSystem:
             'Code': code,
             'Name': name,
             'Description': description,
-            'Quantity': abs(quantity) + existing_quantity,
+            'Quantity': (abs(float(quantity)) + existing_quantity),
             'Price': price,
             'Minimum Stock': minimum_stock
         }
@@ -72,7 +70,7 @@ class StockManagementSystem:
 
         entry_info = {
             'Code': code,
-            'Quantity': abs(quantity),
+            'Quantity': abs(float(quantity)),
             'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
@@ -91,8 +89,6 @@ class StockManagementSystem:
             self.notify(msg)
     
     def product_output(self, code, quantity):
-        #TODO: Check signature
-        
         product_info = None
 
         with open('products.csv', mode='r') as file:
@@ -120,7 +116,7 @@ class StockManagementSystem:
             reader = csv.DictReader(file)
             for row in reader:
                 if int(row['Code']) == code:
-                    row['Quantity'] = str(float(row['Quantity']) - abs(quantity))
+                    row['Quantity'] = str(float(row['Quantity']) - abs(float(quantity)))
                 updated_products.append(row)
 
         with open('products.csv', mode='w', newline='') as file:
@@ -131,7 +127,7 @@ class StockManagementSystem:
         # Append the product output information to the 'product_output.csv' file
         output_info = {
             'Code': code,
-            'Quantity': -abs(quantity),
+            'Quantity': -abs(float(quantity)),
             'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
@@ -191,13 +187,42 @@ class StockManagementSystem:
                 products.append(row)
         return products
     
-    def get_products_movement(self, start, end):
-        products = []
-        with open("products.csv", 'r') as file:
-            csvreader = csv.DictReader(file)
-            for row in csvreader:
-                products.append(row)
-        return products
+    def get_products_movement(self, start_timestamp, end_timestamp):
+        movement_report = []
+        start_timestamp = datetime.strptime(start_timestamp, '%Y-%m-%d %H:%M:%S')
+        end_timestamp = datetime.strptime(end_timestamp, '%Y-%m-%d %H:%M:%S')
+        with open('product_movement.csv', mode='r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                timestamp = datetime.strptime(row['Timestamp'], '%Y-%m-%d %H:%M:%S')
+                if start_timestamp <= timestamp <= end_timestamp:
+                    movement_report.append(row)
+        return movement_report
+    
+    def get_products_without_output(self, start_timestamp, end_timestamp):
+        product_without_output_report = []
+        products_with_output = set()
+        start_timestamp = datetime.strptime(start_timestamp, '%Y-%m-%d %H:%M:%S')
+        end_timestamp = datetime.strptime(end_timestamp, '%Y-%m-%d %H:%M:%S')
+
+        with open('product_movement.csv', mode='r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                timestamp = datetime.strptime(row['Timestamp'], '%Y-%m-%d %H:%M:%S')
+                if start_timestamp <= timestamp <= end_timestamp:
+                    code = row['Code']
+                    quantity = float(row['Quantity'])
+                    if quantity < 0:
+                        products_with_output.add(code)
+
+        with open('products.csv', mode='r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                code = row['Code']
+                if code not in products_with_output:
+                    product_without_output_report.append(row)
+
+        return product_without_output_report
     
     def notify(self, msg):
         if self.__notify_function is not None:

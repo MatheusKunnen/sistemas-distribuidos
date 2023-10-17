@@ -26,7 +26,7 @@ class Server:
         # print('p entry', username, payload_raw, signature)
         is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)
         if is_signature_valid:
-            return self.__sms.product_entry(payload['code'], payload['name'], payload['description'], payload['quantity'], payload['price'], payload['minimum_stock'], signature)
+            return self.__sms.product_entry(payload['code'], payload['name'], payload['description'], payload['quantity'], payload['price'], payload['minimum_stock'])
         else:
             return "Invalid signature"
     
@@ -47,6 +47,22 @@ class Server:
         else:
             return 'Invalid signature'
         
+    @Pyro5.api.expose
+    def get_products_movement(self, username, payload_raw, signature):
+        is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)
+        if is_signature_valid:
+            return self.__sms.get_products_movement(payload['start_timestamp'], payload['end_timestamp'])
+        else:
+            return 'Invalid signature'
+
+    @Pyro5.api.expose
+    def get_products_without_output(self, username, payload_raw, signature):
+        is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)
+        if is_signature_valid:
+            return self.__sms.get_products_without_output(payload['start_timestamp'], payload['end_timestamp'])
+        else:
+            return 'Invalid signature'
+
     @Pyro5.api.expose
     def notification_register(self, username, payload_raw, signature):
         is_signature_valid, payload = self.__sms.validate_payload(username, payload_raw, signature)

@@ -99,7 +99,7 @@ class ClientMenu:
             print("1 - Register product movement.")
             print("2 - Show product stock report.")
             print("3 - Show product movement report.")
-            print("4 - Show product without movement report.")
+            print("4 - Show product without output report.")
             print("5 - Exit.")
             option = int(input(">"))
             if option < 1 or option > 5:
@@ -145,7 +145,7 @@ class ClientMenu:
 
     def __handle_login(self):
         self.__print_header()
-        key_path = './mk_private_key.pem' #input("Private Key path:")
+        key_path = input("Private Key path:") #'./mk_private_key.pem'
         try:
             with open(key_path, "rb") as private_key_file:
                 self.__key = RSA.import_key(private_key_file.read())
@@ -219,17 +219,31 @@ class ClientMenu:
 
     def __handle_p_mov_report(self):
         self.__print_header()
-        start_timestamp = input('Start (YYYY-MM-dd HH):')
-        end_timestamp = input('End (YYYY-MM-dd HH):')
-        # TODO
+        start_timestamp = input('Start (YYYY-MM-dd HH:MM:SS):')
+        end_timestamp = input('End (YYYY-MM-dd HH:MM:SS):')
+
+        payload = { 'start_timestamp': start_timestamp, 'end_timestamp': end_timestamp }
+        payload_encoded = self.__get_encoded_payload(payload)
+        payload_signature = self.__sign_payload(payload_encoded)
+
+        out_msg = self.__sms.get_products_movement(self.__username, payload_encoded, payload_signature.hex())
+        print(out_msg)
+
         input('Enter to continue...')
         return -1
 
     def __handle_p_no_mov_report(self):
         self.__print_header()
-        start_timestamp = input('Start (YYYY-MM-dd HH):')
-        end_timestamp = input('End (YYYY-MM-dd HH):')
-        # TODO
+        start_timestamp = input('Start (YYYY-MM-dd HH:MM:SS):')
+        end_timestamp = input('End (YYYY-MM-dd HH:MM:SS):')
+
+        payload = { 'start_timestamp': start_timestamp, 'end_timestamp': end_timestamp }
+        payload_encoded = self.__get_encoded_payload(payload)
+        payload_signature = self.__sign_payload(payload_encoded)
+
+        out_msg = self.__sms.get_products_without_output(self.__username, payload_encoded, payload_signature.hex())
+        print(out_msg)
+
         input('Enter to continue...')
         return -1
 
