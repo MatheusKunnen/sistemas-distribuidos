@@ -43,7 +43,7 @@ class StockManagementSystem:
         with open('products.csv', mode='r') as file:
             reader = csv.DictReader(file)
             for row in reader:
-                if int(row['Code']) == code:
+                if int(row['Code']) == int(code):
                     existing_product = row
                 else:
                     products.append(row)
@@ -138,10 +138,10 @@ class StockManagementSystem:
             output_writer.writerow(output_info)
 
 
-        should_notify = float(product_info['Quantity']) < float(product_info['Minimum Stock'])
+        should_notify = (float(product_info['Quantity']) + float(output_info['Quantity']) ) < float(product_info['Minimum Stock'])
 
         if should_notify:
-            msg = f"Product '{product_info['Name']}' have {product_info['Quantity']} which is less than its minimum stock of {product_info['Minimum Stock']}"
+            msg = f"Product '{product_info['Name']}' have {float(product_info['Quantity']) + float(output_info['Quantity'])} which is less than its minimum stock of {product_info['Minimum Stock']}"
             print(msg)
             self.notify(msg)
 
