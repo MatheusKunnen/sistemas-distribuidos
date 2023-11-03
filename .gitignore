@@ -4,3 +4,4 @@ __py_cache__
 *.pem
 *.csv
 *.pyc
+application-04/server/data.json
