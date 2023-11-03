@@ -2,6 +2,7 @@ from stock_management_system import StockManagementSystem
 import Pyro5.api
 import Pyro5
 import base64
+from datetime import datetime
 from threading import Timer
 
 Pyro5.config.SERIALIZER = "marshal"
@@ -96,16 +97,12 @@ class Server:
     def notify_product_for_promotion(self):
         try:
             print('Checking for products to promote')
-            products = self.__sms.get_products()
-            products_for_promotion = []
-            for product in products:
-                if float(product['Quantity']) > float(product['Minimum Stock']):
-                    products_for_promotion.append({'Code':product['Code'],'Name':product['Name'],'Quantity':product['Quantity']})
+            products = self.__sms.get_products_without_output('2023-01-01 00:00:00', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
             msg = ['Products for promotions']
-            if len(products_for_promotion) > 0:
-                msg.append('\t'.join(products_for_promotion[0].keys()))
-                for product in products_for_promotion:
+            if len(products) > 0:
+                msg.append('\t'.join(products[0].keys()))
+                for product in products:
                     msg.append('\t'.join(product.values()))
             else:
                 print('No products for promotions found. :(')
@@ -135,8 +132,8 @@ if __name__ == "__main__":
         uri = daemon.register(server)   
         ns.register("sms", uri)   
             
-        TIMER_TIME = 60*60*24 # 24hours
-        # TIMER_TIME = 10 # 10s
+        # TIMER_TIME = 60*60*24 # 24hours
+        TIMER_TIME = 10 # 10s
         timer = RepeatTimer(TIMER_TIME, server.notify_product_for_promotion)
         timer.start()
         
