@@ -47,6 +47,10 @@ class StockManagementSystem:
         product.timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.products.append(product)
 
+        # Add product movement record
+        product_mov = ProductMovement(id=product.id, quantity=product.stock, timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        self.product_movement.append(product_mov)
+
         self.persist()
         
         return product
@@ -75,7 +79,7 @@ class StockManagementSystem:
         if should_notify:
             payload = {
                     'title':f'Low stock for product "{self.products[product_i].name}" ({self.products[product_i].id})',
-                    'message':f"Product '{self.products[product_i].name}' have {self.products[product_i].quantity} which is less than its minimum stock of {self.products[product_i].minimum_stock}"
+                    'message':f"Product '{self.products[product_i].name}' have {self.products[product_i].stock} which is less than its minimum stock of {self.products[product_i].minimum_stock}"
                 }
             print(payload)
             self.notify(payload)

@@ -5,6 +5,7 @@ from models import *
 
 app = Flask(__name__)
 
+# Cadastro de usuário
 @app.route('/user', methods=['POST'])
 def register():
     try:
@@ -37,6 +38,7 @@ def get_products():
         print(e)
         return jsonify({'error': e.__str__()}), 500
 
+# Criação e lançamento de entrada de produto
 @app.route('/product', methods=['POST'])
 def register_product():
     try:
@@ -48,6 +50,7 @@ def register_product():
         print(e)
         return jsonify({'error': e.__str__()}), 500
 
+# Lançamento de entrada e saída
 @app.route('/product/movement', methods=['POST'])
 def register_product_movement():
     try:
