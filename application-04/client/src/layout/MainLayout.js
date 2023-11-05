@@ -9,7 +9,7 @@ const MainLayout = ({children}) => {
             <Paper elevation={10} style={{minWidth: 300}}>
                 <Menu/>
             </Paper>
-            <div style={{padding: 48, minHeight: '100vh'}}>{children}</div>
+            <div style={{padding: 48, minHeight: '100vh', width:'100%'}}>{children}</div>
         </div>
     )
 }
