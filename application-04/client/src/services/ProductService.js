@@ -11,12 +11,12 @@ class ProductService {
   ) {
     try {
         const response = await api.post("/product", {
-          id,
+          id: parseInt(id),
           name,
           description,
-          stock,
-          minimum_stock: minimumStock,
-          price
+          stock: parseFloat(stock),
+          minimum_stock: parseFloat(minimumStock),
+          price: parseFloat(price),
         });
         return response.data;
     } catch (error) {
@@ -28,8 +28,8 @@ class ProductService {
   async movement(id, quantity) {
     try {
         const response = await api.post("/product/movement", {
-            id,
-            quantity
+          id: parseInt(id),
+          quantity: parseFloat(quantity),
         });
         return response.data;
     } catch (error) {
