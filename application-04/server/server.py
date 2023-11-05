@@ -1,13 +1,17 @@
 import json
 from flask import Flask, jsonify, request
+from flask_cors import CORS, cross_origin
 from StockManagementSystem import StockManagementSystem
 from models import *
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # TODO: Revisar
 # Cadastro de usuário
 @app.route('/user', methods=['POST'])
+@cross_origin()
 def register():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -20,6 +24,7 @@ def register():
 
 # TODO: Criar login
 @app.route('/login', methods=['POST'])
+@cross_origin()
 def login():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -32,6 +37,7 @@ def login():
 
 # Produtos em estoque
 @app.route('/product', methods=['GET'])
+@cross_origin()
 def get_products():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -44,6 +50,7 @@ def get_products():
 
 # Criação e lançamento de entrada de produto
 @app.route('/product', methods=['POST'])
+@cross_origin()
 def register_product():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -56,6 +63,7 @@ def register_product():
 
 # Lançamento de entrada e saída
 @app.route('/product/movement', methods=['POST'])
+@cross_origin()
 def register_product_movement():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -68,6 +76,7 @@ def register_product_movement():
 
 # Fluxo de movimentação (entradas e saídas) do estoque por período
 @app.route('/product/movement', methods=['GET'])
+@cross_origin()
 def get_product_movement():
     try:
         start_time = request.args.get('startTime')
@@ -81,6 +90,7 @@ def get_product_movement():
 
 # Lista de produtos sem saída por período
 @app.route('/product/without-output', methods=['GET'])
+@cross_origin()
 def get_product_without_output():
     try:
         start_time = request.args.get('startTime')
