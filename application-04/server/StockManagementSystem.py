@@ -44,11 +44,11 @@ class StockManagementSystem:
         if product_exists:
             raise KeyError(f"Product {product.name} ({product.id}) already exists")
         
-        product.timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        product.timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         self.products.append(product)
 
         # Add product movement record
-        product_mov = ProductMovement(id=product.id, quantity=product.stock, timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        product_mov = ProductMovement(id=product.id, quantity=product.stock, timestamp=datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
         self.product_movement.append(product_mov)
 
         self.persist()
@@ -72,7 +72,7 @@ class StockManagementSystem:
         self.products[product_i].stock += product_mov.quantity
         
         # Add product movement record
-        product_mov.timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        product_mov.timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         self.product_movement.append(product_mov)
 
         should_notify = self.products[product_i].stock < self.products[product_i].minimum_stock
@@ -120,10 +120,10 @@ class StockManagementSystem:
     
     def get_products_movement(self, start_timestamp, end_timestamp):
         movement_report = []
-        start_timestamp = datetime.strptime(start_timestamp, '%Y-%m-%d %H:%M:%S')
-        end_timestamp = datetime.strptime(end_timestamp, '%Y-%m-%d %H:%M:%S')
+        start_timestamp = datetime.strptime(start_timestamp, '%Y-%m-%dT%H:%M:%S')
+        end_timestamp = datetime.strptime(end_timestamp, '%Y-%m-%dT%H:%M:%S')
         for row in self.product_movement:
-            timestamp = datetime.strptime(row.timestamp, '%Y-%m-%d %H:%M:%S')
+            timestamp = datetime.strptime(row.timestamp, '%Y-%m-%dT%H:%M:%S')
             if start_timestamp <= timestamp <= end_timestamp:
                 movement_report.append(row)
         return movement_report
@@ -131,19 +131,19 @@ class StockManagementSystem:
     def get_products_without_output(self, start_timestamp, end_timestamp):
         product_without_output_report = []
         products_with_output = set()
-        start_timestamp = datetime.strptime(start_timestamp, '%Y-%m-%d %H:%M:%S')
-        end_timestamp = datetime.strptime(end_timestamp, '%Y-%m-%d %H:%M:%S')
+        start_timestamp = datetime.strptime(start_timestamp, '%Y-%m-%dT%H:%M:%S')
+        end_timestamp = datetime.strptime(end_timestamp, '%Y-%m-%dT%H:%M:%S')
 
         for row in self.product_movement:
-            timestamp = datetime.strptime(row['Timestamp'], '%Y-%m-%d %H:%M:%S')
+            timestamp = datetime.strptime(row.timestamp, '%Y-%m-%dT%H:%M:%S')
             if start_timestamp <= timestamp <= end_timestamp:
-                code = row['id']
-                quantity = float(row['quantity'])
+                code = row.id
+                quantity = float(row.quantity)
                 if quantity < 0:
                     products_with_output.add(code)
 
         for row in self.products:
-            code = row['id']
+            code = row.id
             if code not in products_with_output:
                 product_without_output_report.append(row)
 

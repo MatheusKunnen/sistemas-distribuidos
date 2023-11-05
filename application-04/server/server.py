@@ -5,6 +5,7 @@ from models import *
 
 app = Flask(__name__)
 
+# TODO: Revisar
 # Cadastro de usuário
 @app.route('/user', methods=['POST'])
 def register():
@@ -17,6 +18,7 @@ def register():
         print(e)
         return jsonify({'error': e.__str__()}), 500
 
+# TODO: Criar login
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -28,11 +30,13 @@ def login():
         print(e)
         return jsonify({'error': e.__str__()}), 500
 
+# Produtos em estoque
 @app.route('/product', methods=['GET'])
 def get_products():
     try:
         sms = StockManagementSystem.GetInstance()
-        output = sms.get_products()
+        products = sms.get_products()
+        output = [product for product in products if product.stock > 0] # Retorna apenas os que tem estoque
         return jsonify(output)
     except Exception as e:
         print(e)
@@ -62,12 +66,27 @@ def register_product_movement():
         print(e)
         return jsonify({'error': e.__str__()}), 500
 
-@app.route('/product/<id>/movement', methods=['GET'])
+# Fluxo de movimentação (entradas e saídas) do estoque por período
+@app.route('/product/movement', methods=['GET'])
 def get_product_movement():
     try:
+        start_time = request.args.get('startTime')
+        end_time = request.args.get('endTime')
         sms = StockManagementSystem.GetInstance()
-        user = User.from_dict(request.get_json())
-        output = sms.register_user(user)
+        output = sms.get_products_movement(start_time, end_time)
+        return jsonify(output)
+    except Exception as e:
+        print(e)
+        return jsonify({'error': e.__str__()}), 500
+
+# Lista de produtos sem saída por período
+@app.route('/product/without-output', methods=['GET'])
+def get_product_without_output():
+    try:
+        start_time = request.args.get('startTime')
+        end_time = request.args.get('endTime')
+        sms = StockManagementSystem.GetInstance()
+        output = sms.get_products_without_output(start_time, end_time)
         return jsonify(output)
     except Exception as e:
         print(e)
