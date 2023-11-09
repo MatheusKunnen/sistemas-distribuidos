@@ -1,5 +1,5 @@
-import json
 from flask import Flask, jsonify, request
+from flask_sse import sse
 from flask_cors import CORS, cross_origin
 from StockManagementSystem import StockManagementSystem
 from models import *
@@ -7,6 +7,15 @@ from models import *
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+# Configura redis e sse
+app.config["REDIS_URL"] = "redis://redis"
+app.register_blueprint(sse, url_prefix='/events')
+
+def server_side_event(message):
+    """ Function to publish server side event """
+    with app.app_context():
+        sse.publish({"message": message}, type='publish')
 
 # TODO: Revisar
 # Cadastro de usuário
@@ -40,6 +49,7 @@ def login():
 @cross_origin()
 def get_products():
     try:
+        server_side_event('Usuário requisitou produtos em estoque')
         sms = StockManagementSystem.GetInstance()
         products = sms.get_products()
         output = [product for product in products if product.stock > 0] # Retorna apenas os que tem estoque
