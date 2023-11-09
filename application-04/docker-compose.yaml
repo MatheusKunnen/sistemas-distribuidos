@@ -1,0 +1,26 @@
+version: '3.5'
+
+services:
+   redis:
+     container_name: redis
+     image: redis
+   server:
+    container_name: server
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    volumes:
+      - './server:/server'
+    ports:
+      - '5000:5000'
+    depends_on:
+      - redis
+   client:
+    container_name: client
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    volumes:
+      - './client:/client'
+    ports:
+      - '3000:3000'
