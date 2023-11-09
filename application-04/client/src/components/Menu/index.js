@@ -16,7 +16,7 @@ import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import StarBorder from '@mui/icons-material/StarBorder';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 export default function NestedList() {
   const [openReports, setOpenReports] = React.useState(true);
@@ -33,14 +33,14 @@ export default function NestedList() {
         </ListSubheader>
       }
     >
-    <Link to='/home' style={{ textDecoration: 'none', color: '#000000DE' }}>
-      <ListItemButton>
-        <ListItemIcon>
-          <HomeIcon />
-        </ListItemIcon>
-        <ListItemText primary="Home" />
-      </ListItemButton>
-    </Link>
+      <Link to="/home" style={{ textDecoration: 'none', color: '#000000DE' }}>
+        <ListItemButton>
+          <ListItemIcon>
+            <HomeIcon />
+          </ListItemIcon>
+          <ListItemText primary="Home" />
+        </ListItemButton>
+      </Link>
       <ListItemButton onClick={() => setopenProducts(!openProducts)}>
         <ListItemIcon>
           <FormatListBulletedIcon />
@@ -50,22 +50,28 @@ export default function NestedList() {
       </ListItemButton>
       <Collapse in={openProducts} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-            <Link to='/product/create' style={{ textDecoration: 'none', color: '#000000DE' }}>
-                <ListItemButton sx={{ pl: 4 }}>
-                    <ListItemIcon>
-                        <AddCircleOutlineIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Create" />
-                </ListItemButton>
-            </Link>
-            <Link to='/product/movement' style={{ textDecoration: 'none', color: '#000000DE' }}>
-                <ListItemButton sx={{ pl: 4 }}>
-                    <ListItemIcon>
-                        <TrendingFlatIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Movement" />
-                </ListItemButton>
-            </Link>
+          <Link
+            to="/product/create"
+            style={{ textDecoration: 'none', color: '#000000DE' }}
+          >
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemIcon>
+                <AddCircleOutlineIcon />
+              </ListItemIcon>
+              <ListItemText primary="Create" />
+            </ListItemButton>
+          </Link>
+          <Link
+            to="/product/movement"
+            style={{ textDecoration: 'none', color: '#000000DE' }}
+          >
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemIcon>
+                <TrendingFlatIcon />
+              </ListItemIcon>
+              <ListItemText primary="Movement" />
+            </ListItemButton>
+          </Link>
         </List>
       </Collapse>
       <ListItemButton onClick={() => setOpenReports(!openReports)}>
@@ -77,30 +83,39 @@ export default function NestedList() {
       </ListItemButton>
       <Collapse in={openReports} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-            <Link to='/reports/stock' style={{ textDecoration: 'none', color: '#000000DE' }}>
-                <ListItemButton sx={{ pl: 4 }}>
-                    <ListItemIcon>
-                        <InventoryIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Products in stock" />
-                </ListItemButton>
-            </Link>
-            <Link to='/reports/movements' style={{ textDecoration: 'none', color: '#000000DE' }}>
-                <ListItemButton sx={{ pl: 4 }}>
-                    <ListItemIcon>
-                        <TrendingFlatIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Product movements" />
-                </ListItemButton>
-            </Link>
-            <Link to='/reports/without-output' style={{ textDecoration: 'none', color: '#000000DE' }}>
-                <ListItemButton sx={{ pl: 4 }}>
-                    <ListItemIcon>
-                        <DoNotDisturbIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Products without ouput" />
-                </ListItemButton>
-            </Link>
+          <Link
+            to="/reports/stock"
+            style={{ textDecoration: 'none', color: '#000000DE' }}
+          >
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemIcon>
+                <InventoryIcon />
+              </ListItemIcon>
+              <ListItemText primary="Products in stock" />
+            </ListItemButton>
+          </Link>
+          <Link
+            to="/reports/movements"
+            style={{ textDecoration: 'none', color: '#000000DE' }}
+          >
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemIcon>
+                <TrendingFlatIcon />
+              </ListItemIcon>
+              <ListItemText primary="Product movements" />
+            </ListItemButton>
+          </Link>
+          <Link
+            to="/reports/without-output"
+            style={{ textDecoration: 'none', color: '#000000DE' }}
+          >
+            <ListItemButton sx={{ pl: 4 }}>
+              <ListItemIcon>
+                <DoNotDisturbIcon />
+              </ListItemIcon>
+              <ListItemText primary="Products without ouput" />
+            </ListItemButton>
+          </Link>
         </List>
       </Collapse>
       <ListItemButton>

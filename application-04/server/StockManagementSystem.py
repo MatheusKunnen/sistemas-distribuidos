@@ -1,6 +1,3 @@
-from Crypto.PublicKey import RSA
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
 from key_generator import KeyGenerator
 from models import *
 
@@ -88,33 +85,17 @@ class StockManagementSystem:
         
         return product_mov
     
-    def validate_payload_signature(self, username, payload, signature_hex):
+    def validate_user(self, username, password):
         user_row = None
         for row in self.users:
-            if row.user == username:
+            if row.name == username:
                 user_row = row
 
         if user_row is None:
             print(f'Invalid user {username}')
-            return False, None
+            return False
 
-        public_key = RSA.import_key(user_row[1].encode('utf-8'))
-
-        # Hash the message
-        hash_object = SHA256.new(payload.encode())
-
-        # Convert the hexadecimal signature back to bytes
-        signature = bytes.fromhex(signature_hex)
-        
-        try:
-            # Verify the signature using the public key
-            pkcs1_15.new(public_key).verify(hash_object, signature)
-            print("Signature is valid")
-            return True, json.loads(payload)
-        except (ValueError, TypeError):
-            print("Signature is invalid. Message could not be verified.")
-        return False, None
-
+        return user_row.name == username and user_row.password == password
     def get_products(self):
         return self.products
     

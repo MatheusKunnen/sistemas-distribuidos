@@ -1,12 +1,24 @@
-import json
 from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
+from flask_basicauth import BasicAuth
 from StockManagementSystem import StockManagementSystem
 from models import *
 
 app = Flask(__name__)
-cors = CORS(app)
+cors = CORS(app, resource={
+    r"/*":{
+        "origins":"*"
+    }
+})
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+basicAuth = BasicAuth(app)
+
+def checkUserLogin(user, password):
+    sms = StockManagementSystem.GetInstance()
+    return sms.validate_user(user, password)
+
+basicAuth.check_credentials=checkUserLogin
 
 # TODO: Revisar
 # Cadastro de usuário
@@ -25,11 +37,12 @@ def register():
 # TODO: Criar login
 @app.route('/login', methods=['POST'])
 @cross_origin()
+@basicAuth.required
 def login():
     try:
         sms = StockManagementSystem.GetInstance()
         user = User.from_dict(request.get_json())
-        output = sms.register_user(user)
+        output = sms.validate_user(user.name, user.password)
         return jsonify(output)
     except Exception as e:
         print(e)
@@ -38,6 +51,7 @@ def login():
 # Produtos em estoque
 @app.route('/product', methods=['GET'])
 @cross_origin()
+@basicAuth.required
 def get_products():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -51,6 +65,7 @@ def get_products():
 # Criação e lançamento de entrada de produto
 @app.route('/product', methods=['POST'])
 @cross_origin()
+@basicAuth.required
 def register_product():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -64,6 +79,7 @@ def register_product():
 # Lançamento de entrada e saída
 @app.route('/product/movement', methods=['POST'])
 @cross_origin()
+@basicAuth.required
 def register_product_movement():
     try:
         sms = StockManagementSystem.GetInstance()
@@ -77,6 +93,7 @@ def register_product_movement():
 # Fluxo de movimentação (entradas e saídas) do estoque por período
 @app.route('/product/movement', methods=['GET'])
 @cross_origin()
+@basicAuth.required
 def get_product_movement():
     try:
         start_time = request.args.get('startTime')
@@ -91,6 +108,7 @@ def get_product_movement():
 # Lista de produtos sem saída por período
 @app.route('/product/without-output', methods=['GET'])
 @cross_origin()
+@basicAuth.required
 def get_product_without_output():
     try:
         start_time = request.args.get('startTime')
@@ -103,4 +121,4 @@ def get_product_without_output():
         return jsonify({'error': e.__str__()}), 500
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=5001)
