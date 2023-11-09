@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask_sse import sse
 from flask_cors import CORS, cross_origin
 from flask_basicauth import BasicAuth
 from StockManagementSystem import StockManagementSystem
@@ -19,6 +20,14 @@ def checkUserLogin(user, password):
     return sms.validate_user(user, password)
 
 basicAuth.check_credentials=checkUserLogin
+# Configura redis e sse
+app.config["REDIS_URL"] = "redis://redis"
+app.register_blueprint(sse, url_prefix='/events')
+
+def server_side_event(message):
+    """ Function to publish server side event """
+    with app.app_context():
+        sse.publish({"message": message}, type='publish')
 
 # TODO: Revisar
 # Cadastro de usuário
@@ -54,6 +63,7 @@ def login():
 @basicAuth.required
 def get_products():
     try:
+        server_side_event('Usuário requisitou produtos em estoque')
         sms = StockManagementSystem.GetInstance()
         products = sms.get_products()
         output = [product for product in products if product.stock > 0] # Retorna apenas os que tem estoque
@@ -121,4 +131,4 @@ def get_product_without_output():
         return jsonify({'error': e.__str__()}), 500
 
 if __name__ == '__main__':
-    app.run(port=5001)
+   app.run(debug=True, host='0.0.0.0', port=5000)
