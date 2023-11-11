@@ -3,3 +3,4 @@ Werkzeug==2.2.3
 Flask_Cors==4.0.0
 Flask_SSE==1.0.0
 pycryptodome==3.19.0
+Flask_BasicAuth==0.2.0
