@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from flask_sse import sse
 from flask_cors import CORS, cross_origin
 from flask_basicauth import BasicAuth
+
 from StockManagementSystem import StockManagementSystem
 from models import *
 
@@ -63,7 +64,6 @@ def login():
 @basicAuth.required
 def get_products():
     try:
-        server_side_event('Usuário requisitou produtos em estoque')
         sms = StockManagementSystem.GetInstance()
         products = sms.get_products()
         output = [product for product in products if product.stock > 0] # Retorna apenas os que tem estoque
@@ -131,4 +131,4 @@ def get_product_without_output():
         return jsonify({'error': e.__str__()}), 500
 
 if __name__ == '__main__':
-   app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5001)

@@ -1,21 +1,22 @@
-from key_generator import KeyGenerator
 from models import *
 
-from datetime import datetime
-
+from datetime import datetime, timedelta
+from threading import Thread
+from time import sleep
 import json
-import os
 
 class StockManagementSystem:
 
     __instance = None
 
     def __init__(self):
-        self.__notify_function = None
+        self._notify_function = None
         self.users: [User] = []
         self.products: [Product] = []
         self.product_movement: [ProductMovement] = []
+        self.__n_thread = None
         self.load()
+        self.__start_notification_thread()
 
     def register_user(self, user: User):
         for row in self.users:
@@ -131,8 +132,8 @@ class StockManagementSystem:
         return product_without_output_report
     
     def notify(self, msg):
-        if self.__notify_function is not None:
-            self.__notify_function(msg)
+        if self._notify_function is not None:
+            self._notify_function(msg)
 
     def persist(self):
         data = {
@@ -165,31 +166,47 @@ class StockManagementSystem:
         print('Saving records...')
         self.persist()
 
+    def notify_product_for_promotion(self):
+        try:
+            print('Checking for products to promote')
+            start_d = datetime.now() - timedelta(30)
+            end_d = datetime.now()
+            products = self.get_products_without_output(start_d.strftime('%Y-%m-%dT%H:%M:%S'), end_d.strftime('%Y-%m-%dT%H:%M:%S'))
+            ids = []
+            if len(products) > 0:
+                for product in products:
+                    ids.append(str(product.id))
+            else:
+                print('No products for promotions found. :(')
+                return
+            codes = ','.join(ids)
+            payload = {
+                    'title':f"There's products for promotions",
+                    'message':f"The following products doesn't have any movement in the last 30 days: {codes}"
+            }
+            self.notify(payload)
+        except Exception as err:
+            print(err)
+            print('Error during promotions notification')
+
+    def __thread_entry(self, sleep_time: int = 10):
+        print("SMS Notification thread started")
+        try:
+            while True:
+                sleep(sleep_time)
+                self.notify_product_for_promotion()
+        except Exception as e:
+            print(e)
+
+    def __start_notification_thread(self):
+        if self.__n_thread is not None:
+            return
+        SLEEP_TIME = 10
+        self.__n_thread = Thread(name="SMS notification thread", target=self.__thread_entry, args=(SLEEP_TIME, ), daemon=True)
+        self.__n_thread.start()
+
     @staticmethod
     def GetInstance():
         if StockManagementSystem.__instance is None:
             StockManagementSystem.__instance = StockManagementSystem()
         return StockManagementSystem.__instance
-
-# Example usage
-if __name__ == '__main__':
-    pass
-    sms = StockManagementSystem()
-    key_generator = KeyGenerator()
-
-    gabriel_public_key = key_generator.generate_keys("gabriel_private_key.pem")
-    matheus_public_key = key_generator.generate_keys('matheus_private_key.pem')
-
-    key = matheus_public_key.export_key()
-    print(key)
-    gabriel_usr = User('Gabriel', gabriel_public_key.export_key())
-    matheus_usr = User('Matheus', key)
-
-    sms.register_user(gabriel_usr)
-    sms.register_user(matheus_usr)
-
-    sms.product_entry(1, 'Product A', 'description A', 100, 10.99, 50)
-    sms.product_entry(2, 'Product B', 'description B', 50, 5.99, 30)
-    sms.product_output(1, 30)
-
-    print(sms.get_products())
