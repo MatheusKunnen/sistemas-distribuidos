@@ -44,13 +44,14 @@ def register():
         print(e)
         return jsonify({'error': e.__str__()}), 500
 
-# TODO: Criar login
+# Login
 @app.route('/login', methods=['POST'])
 @cross_origin()
 @basicAuth.required
 def login():
     try:
         sms = StockManagementSystem.GetInstance()
+        sms._notify_function = server_side_event
         user = User.from_dict(request.get_json())
         output = sms.validate_user(user.name, user.password)
         return jsonify(output)
