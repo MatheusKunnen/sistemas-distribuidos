@@ -7,7 +7,6 @@ class User:
 
     @staticmethod
     def from_dict(data):
-        print(data)
         return User(name=data['name'], password=data['password'])
 
 

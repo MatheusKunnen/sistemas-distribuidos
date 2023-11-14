@@ -32,7 +32,6 @@ class StockManagementSystem:
 
     def register_product(self, product: Product):
         product_exists = False
-        print(self.products)
         # Check if a product with the same code already exists
         for row in self.products:
             if row.id == product.id:
