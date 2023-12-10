@@ -9,9 +9,10 @@ class TransactionStatus(Enum):
 
 @dataclass
 class Transaction:
-    id: int
+    tid: int
     status: TransactionStatus
+    participants: list[str]
 
     @staticmethod
     def from_dict(data):
-        return Transaction(data['id'], data['status'])
+        return Transaction(data['tid'], data['status'], data['participants'])

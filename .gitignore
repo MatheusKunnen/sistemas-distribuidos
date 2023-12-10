@@ -5,3 +5,4 @@ __py_cache__
 *.csv
 *.pyc
 application-04/server/data.json
+log-*.json
