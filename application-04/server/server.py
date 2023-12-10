@@ -22,7 +22,7 @@ def checkUserLogin(user, password):
 
 basicAuth.check_credentials=checkUserLogin
 # Configura redis e sse
-app.config["REDIS_URL"] = "redis://redis"
+app.config["REDIS_URL"] = "redis://default:4UoS0RiiXkR8oHsTk04E1yqbjJqLKCFG@redis-18128.c241.us-east-1-4.ec2.cloud.redislabs.com:18128"
 app.register_blueprint(sse, url_prefix='/events')
 
 def server_side_event(message):
