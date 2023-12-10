@@ -17,7 +17,7 @@ class Logger:
         data = {
             'logs': self.logs,
         }
-        print(data)
+
         with open(f'log-{self.name}.json', 'w') as file:
             json.dump(data, file, default=lambda o: o.__dict__, ensure_ascii=True, indent=4)
 
