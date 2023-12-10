@@ -1,5 +1,6 @@
 from Logger import Logger
 from models.Transaction import Transaction, TransactionStatus
+import json
 
 class Coordinator:
     def __init__(self):
@@ -32,7 +33,22 @@ class Coordinator:
         pass
 
     def persist(self):
-        pass
+        data = {
+            'transactions': self.transactions,
+        }
+        with open('transactions.json', 'w') as file:
+            json.dump(data, file, default=lambda o: o.__dict__, ensure_ascii=True, indent=4)
 
     def load(self):
-        pass
+        try:
+            data = None
+            
+            with open('transactions.json', 'r') as file:
+                data = json.load(file)
+            
+            if data is None:
+                raise Exception('Invalid file')
+            
+            self.transactions = [Transaction.from_dict(d) for d in data['transactions']]
+        except:
+            self.transactions = []
