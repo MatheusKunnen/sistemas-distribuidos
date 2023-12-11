@@ -6,6 +6,9 @@ import json
 import requests
 
 class Coordinator:
+
+    __instance = None
+
     def __init__(self):
         self.transactions = []
         self.logger = Logger('coordinator')
@@ -23,6 +26,7 @@ class Coordinator:
         for i in range(len(self.transactions)):
             if self.transactions[i].tid == tid:
                 self.transactions[i].participants.append(participant)
+                self.persist()
                 found = True
         
         if not found:
@@ -33,7 +37,7 @@ class Coordinator:
     def getTransaction(self, tid: int):
         transaction = None
         for t in self.transactions:
-            if t.tid == tid:
+            if int(t.tid) == int(tid):
                 transaction = t
                 break
         
@@ -87,7 +91,7 @@ class Coordinator:
             self.logger.log(msg, tid, LogLevel.ERROR)
             raise RuntimeError(msg)
         
-        self.logger.load(f'Rolling back transaction.', tid)
+        self.logger.log(f'Rolling back transaction.', tid)
         
         self.__updateTransactionStatus(tid, TransactionStatus.ABORTED)
 
@@ -105,7 +109,7 @@ class Coordinator:
         try:
             res = requests.post(f'{participan}/transaction/{tid}/prepare')
 
-            if not res.ok():
+            if not res.ok:
                 msg = f'Cannot prepare participan {participan} {res.status_code}'
                 self.logger.log(msg, tid, LogLevel.ERROR)
                 return False
@@ -124,7 +128,7 @@ class Coordinator:
         try:
             res = requests.post(f'{participan}/transaction/{tid}/commit')
 
-            if not res.ok():
+            if not res.ok:
                 msg = f'Cannot commit participan {participan} {res.status_code}'
                 self.logger.log(msg, tid, LogLevel.FATAL)
                 return False
@@ -140,7 +144,7 @@ class Coordinator:
         try:
             res = requests.post(f'{participan}/transaction/{tid}/abort')
 
-            if not res.ok():
+            if not res.ok:
                 msg = f'Cannot abort participan {participan} {res.status_code}'
                 self.logger.log(msg, tid, LogLevel.FATAL)
                 return False
@@ -156,7 +160,7 @@ class Coordinator:
         updated = False
         previous_state = None
         for i in range(len(self.transactions)):
-            if self.transactions[i].tid == tid:
+            if int(self.transactions[i].tid) == int(tid):
                 previous_state = self.transactions[i].status
                 if previous_state != status and  previous_state in [TransactionStatus.ABORTED, TransactionStatus.COMMITED]:
                     msg = f'Cannot change an ended trasaction {tid} {previous_state}->{status}'
@@ -182,23 +186,23 @@ class Coordinator:
         pendingTransactions = []
         for transaction in self.transactions:
             if transaction.status not in [TransactionStatus.COMMITED, TransactionStatus.ABORTED]:
-                pendingTransactions.append()
+                pendingTransactions.append(transaction)
 
-        for transaction in pendingTransactions:
-            self.rollbackTransaction(transaction.tid)
+        # for transaction in pendingTransactions:
+            # self.rollbackTransaction(transaction.tid)
 
     def persist(self):
         data = {
             'transactions': self.transactions,
         }
-        with open('transactions.json', 'w') as file:
+        with open('data-transactions.json', 'w') as file:
             json.dump(data, file, default=lambda o: o.__dict__, ensure_ascii=True, indent=4)
 
     def load(self):
         try:
             data = None
             
-            with open('transactions.json', 'r') as file:
+            with open('data-transactions.json', 'r') as file:
                 data = json.load(file)
             
             if data is None:
@@ -207,6 +211,12 @@ class Coordinator:
             self.transactions = [Transaction.from_dict(d) for d in data['transactions']]
         except:
             self.transactions = []
+
+    @staticmethod
+    def GetInstance():
+        if Coordinator.__instance is None:
+            Coordinator.__instance = Coordinator()
+        return Coordinator.__instance
 
 if __name__ == '__main__':
     coord = Coordinator()

@@ -2,11 +2,11 @@ from dataclasses import dataclass
 from enum import Enum
 
 from .Register import Register
-class TransactionStatus(Enum):
-    IN_PROGRESS = 0
-    PREPARED = 1
-    COMMITED = 2
-    ABORTED = 3
+class TransactionStatus(str, Enum):
+    IN_PROGRESS = 'IN_PROGRESS'
+    PREPARED = 'PREPARED'
+    COMMITED = 'COMMITED'
+    ABORTED = 'ABORTED'
 
 @dataclass
 class Transaction:
@@ -16,7 +16,7 @@ class Transaction:
 
     @staticmethod
     def from_dict(data):
-        return Transaction(data['tid'], data['status'], data['participants'])
+        return Transaction(int(data['tid']), data['status'], data['participants'])
 
 @dataclass
 class ParticipantTransaction:
@@ -28,4 +28,6 @@ class ParticipantTransaction:
 
     @staticmethod
     def from_dict(data):
-        return Transaction(data['tid'], data['status'], data['inserted'], data['updated'], data['deleted'])
+        inserted = [Register.from_dict(r) for r in data['inserted']]
+        updated = [Register.from_dict(r) for r in data['updated']]
+        return ParticipantTransaction(int(data['tid']), data['status'], inserted, updated, data['deleted'])

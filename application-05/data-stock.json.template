@@ -1,0 +1,33 @@
+{
+  "transactions": [],
+  "rows": [
+    {
+      "id": 1,
+      "payload": {
+        "id": 1,
+        "stock": 91,
+        "price": 1.99
+      },
+      "tid": -1
+    },
+    {
+      "id": 2,
+      "payload": {
+        "id": 1,
+        "stock": 400,
+        "price": 5.5
+      },
+      "tid": -1
+    },
+    {
+      "id": 3,
+      "payload": {
+        "id": 1,
+        "stock": 400,
+        "price": 5.5
+      },
+      "tid": -1
+    }
+  ],
+  "last_row_id": 0
+}
