@@ -1,0 +1,22 @@
+{
+  "transactions": [],
+  "rows": [
+    {
+      "id": 1,
+      "payload": {
+        "id": 1,
+        "balance": 100
+      },
+      "tid": -1
+    },
+    {
+      "id": 2,
+      "payload": {
+        "id": 2,
+        "balance": 120
+      },
+      "tid": -1
+    }
+  ],
+  "last_row_id": 0
+}

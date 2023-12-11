@@ -290,7 +290,7 @@ class Participant:
             self.transactions = []
             self.rows = []
             self.last_row_id = 0
-            # self.persist()
+            self.persist()
 
 if __name__ == '__main__':
     p = Participant('test', 'http://localhost:5002')

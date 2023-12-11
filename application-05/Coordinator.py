@@ -142,7 +142,7 @@ class Coordinator:
         
     def __abortParticipant(self, participan, tid):
         try:
-            res = requests.post(f'{participan}/transaction/{tid}/abort')
+            res = requests.post(f'{participan}/transaction/{tid}/rollback')
 
             if not res.ok:
                 msg = f'Cannot abort participan {participan} {res.status_code}'
@@ -188,8 +188,8 @@ class Coordinator:
             if transaction.status not in [TransactionStatus.COMMITED, TransactionStatus.ABORTED]:
                 pendingTransactions.append(transaction)
 
-        # for transaction in pendingTransactions:
-            # self.rollbackTransaction(transaction.tid)
+        for transaction in pendingTransactions:
+            self.rollbackTransaction(transaction.tid)
 
     def persist(self):
         data = {
