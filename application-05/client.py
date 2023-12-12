@@ -37,20 +37,27 @@ def registerOrder(tid, client_id, product_id, amount):
 
 if __name__ == '__main__':
     tid = startTransaction()
+    input('Enter to continue...')
+
     try:
         product_id = 1
         amount = 1
         updateStock(tid, product_id, amount)
-        
+        input('Enter to continue...')
+
         client_id = 1
         order_amount = 2.99
         registerOrder(tid, client_id, product_id, order_amount)
+        input('Enter to continue...')
 
         account_id = 1
         registerPayment(tid, account_id, order_amount)
+        input('Enter to continue...')
 
+        print('Commiting transaction...')
         commitTransaction(tid)
         tid = None
+        print('Transaction committed...')
     finally:
         if tid is not None:
             print(f'Aborting transaction {tid}')

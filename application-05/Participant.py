@@ -3,8 +3,6 @@ from models.Transaction import ParticipantTransaction, TransactionStatus
 from models.Register import Register
 import json
 import requests
-import traceback
-
 
 class Participant:
     def __init__(self, name:str, coordinator:str, reference:str):
@@ -230,7 +228,7 @@ class Participant:
             
             if actual_status == TransactionStatus.ABORTED:
                 self.__updateTransactionStatus(tid, TransactionStatus.ABORTED)
-            elif actual_status == TransactionStatus.COMMITED:
+            elif actual_status in [TransactionStatus.COMMITED, TransactionStatus.PREPARED]:
                 self.commitTransaction(tid)
 
 
