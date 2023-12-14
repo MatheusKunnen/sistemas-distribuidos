@@ -228,7 +228,7 @@ class Participant:
             
             if actual_status == TransactionStatus.ABORTED:
                 self.__updateTransactionStatus(tid, TransactionStatus.ABORTED)
-            elif actual_status in [TransactionStatus.COMMITED, TransactionStatus.PREPARED]:
+            elif actual_status in [TransactionStatus.COMMITED]:
                 self.commitTransaction(tid)
 
 
